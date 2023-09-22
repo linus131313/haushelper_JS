@@ -150,7 +150,7 @@ function handleSignUp(e) {
                 console.log("this should be reached");
               
               return
-              console.log("this should not be reached");
+    
             } else {
               console.log('Name existiert nicht!');
               document.getElementById('companyError').style.height = "0px";

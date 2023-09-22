@@ -50,17 +50,11 @@
         const password = document.getElementById('signin-password').value;
 
 
-
-
-
-
-
-
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
-                console.log('user logged in: ' + user.email);
+             
 
 
                 const adminsRef = collection(db, 'Admins');
@@ -72,38 +66,28 @@
                     .then((querySnapshot) => {
                         // Iteration über die Dokumente
                         querySnapshot.forEach((doc) => {
-                            console.log(doc.id, " => ", doc.data());
-                            console.log(doc.data().email);
-                            console.log(email);
                             if (doc.data().email === email) {
                                 isAdmin = true;
-                                console.log("User ist Admin");
+                             
                                 window.location.href = "/adminroom"
                             } else {
-                                console.log("User ist kein Admin");
+                          
                             }
                         });
                                         //logout again because user is no admin
                               if(!isAdmin){
     document.getElementById("errorMessage").style.display = "block";
-                                    console.log("User wird wieder ausgeloggt, weil er kein Admin ist");
+                                   
                                 handleSignOut();
                               }
                           
                     })
                     .catch((error) => {
-                        console.error("Fehler beim Abrufen der Dokumente: ", error);
+                      
                     });
 
 
 
-
-   
-
-               
-
-
-                // ...
             })
             .catch((error) => {
     document.getElementById("errorMessage").style.display = "block";
@@ -111,7 +95,7 @@
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 var errorText = document.getElementById('signin-error-message');
-                console.log(errorMessage);
+      
                 errorText.innerHTML = errorMessage;
 
             });
@@ -121,11 +105,11 @@
 
     function handleSignOut() {
         signOut(auth).then(() => {
-            console.log('user signed out')
+
             // Sign-out successful.
         }).catch((error) => {
             const errorMessage = error.message;
-            console.log(errorMessage);
+
             // An error happened.
         });
 
@@ -151,14 +135,14 @@
                 element.style.display = "none";
             });
 
-            console.log(`The current user's UID is equal to ${uid}`);
+      
             // ...
         } else {
             // User is signed out
             publicElements.forEach(function (element) {
                 element.style.display = "initial";
             });
-            console.log(`User is logged out`);
+      
 
             privateElements.forEach(function (element) {
                 element.style.display = "none";

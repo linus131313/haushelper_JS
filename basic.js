@@ -40,9 +40,7 @@ function validateEmail(email) {
 
 if (typeof signUpForm !== null) {
   signUpForm.addEventListener("submit", handleSignUp, true);
-} else {
 }
-
 //handle signUp
 function handleSignUp(e) {
   e.preventDefault();

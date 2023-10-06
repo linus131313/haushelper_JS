@@ -75,11 +75,26 @@ function handleSignOut() {
       const errorMessage = error.message;
     });
 }
+
+
+let signUpForm = document.getElementById("geb_form");
+
+
+
+if (typeof signUpForm !== null) {
+  signUpForm.addEventListener("submit", handleForm, true);
+} 
+
+function handleForm(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  console.log("form");
+}
+
 onAuthStateChanged(auth, (user) => {
   let publicElements = document.querySelectorAll("[data-onlogin='hide']");
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
-    console.log("helo");
     const adminsRef = collection(db, "Admins");
     getDocs(adminsRef)
       .then((querySnapshot) => {

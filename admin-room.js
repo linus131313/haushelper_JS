@@ -70,7 +70,7 @@ async function getFirstFileNameInFolder(folderPath) {
 }
 function handleSignOut() {
   signOut(auth)
-    .then(() => {})
+    .then(() => { })
     .catch((error) => {
       const errorMessage = error.message;
     });
@@ -79,6 +79,7 @@ onAuthStateChanged(auth, (user) => {
   let publicElements = document.querySelectorAll("[data-onlogin='hide']");
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
+    console.log("helo");
     const adminsRef = collection(db, "Admins");
     getDocs(adminsRef)
       .then((querySnapshot) => {
@@ -155,11 +156,11 @@ onAuthStateChanged(auth, (user) => {
                                 filePath + "/" + fileName
                               );
                               deleteObject(desertRef)
-                                .then(() => {})
-                                .catch((error) => {});
+                                .then(() => { })
+                                .catch((error) => { });
                             }
                           })
-                          .catch((error) => {});
+                          .catch((error) => { });
 
                         const storageRef = ref(
                           storage,
@@ -167,7 +168,7 @@ onAuthStateChanged(auth, (user) => {
                         );
                         uploadBytes(storageRef, file);
                         location.reload();
-                      } catch (error) {}
+                      } catch (error) { }
                     }
                   });
 
@@ -188,9 +189,8 @@ onAuthStateChanged(auth, (user) => {
                     .then((querySnapshot) => {
                       const firstDocument = querySnapshot.docs[0];
                       const existingData = firstDocument.data();
-                      const address = `${docz.data().address}, (${
-                        docz.data().zipcode
-                      })`;
+                      const address = `${docz.data().address}, (${docz.data().zipcode
+                        })`;
                       if (!querySnapshot.empty) {
                         if (
                           existingData.employeeCalendar[address] != undefined
@@ -200,7 +200,7 @@ onAuthStateChanged(auth, (user) => {
                         }
                       }
                     })
-                    .catch((error) => {});
+                    .catch((error) => { });
                   userInput.appendChild(defaultOption);
                   getDocs(userCollections)
                     .then((querySnapshot) => {
@@ -210,7 +210,7 @@ onAuthStateChanged(auth, (user) => {
                         userInput.appendChild(opt);
                       });
                     })
-                    .catch((error) => {});
+                    .catch((error) => { });
                   userInput.addEventListener("change", function () {
                     var selectedOption =
                       userInput.options[userInput.selectedIndex].value;
@@ -218,9 +218,8 @@ onAuthStateChanged(auth, (user) => {
                       .then((querySnapshot) => {
                         const firstDocument = querySnapshot.docs[0];
                         const existingData = firstDocument.data();
-                        const address = `${docz.data().address}, (${
-                          docz.data().zipcode
-                        })`;
+                        const address = `${docz.data().address}, (${docz.data().zipcode
+                          })`;
                         if (!querySnapshot.empty) {
                           const newData = {
                             ...existingData,
@@ -230,16 +229,16 @@ onAuthStateChanged(auth, (user) => {
                             },
                           };
                           updateDoc(firstDocument.ref, newData)
-                            .then((firstDocument) => {})
+                            .then((firstDocument) => { })
                             .catch((error) => {
-                            
+
                             });
                         } else {
-                         
+
                         }
                       })
                       .catch((error) => {
-                       
+
                       });
                   });
                   button.appendChild(userInput);
@@ -254,7 +253,7 @@ onAuthStateChanged(auth, (user) => {
                   userList.appendChild(listItem);
                 });
               })
-              .catch((error) => {});
+              .catch((error) => { });
             const companyCollections = collection(companyDoc, "Accesses");
             getDocs(companyCollections)
               .then((querySnapshot) => {
@@ -267,7 +266,7 @@ onAuthStateChanged(auth, (user) => {
                   document.getElementById("status").innerHTML = status;
                   document.getElementById("abo").innerHTML =
                     docy.data().aboName;
-                 
+
                   if (docy.data().aboName == "Testpaket") {
                     document.getElementById("aboButton").innerHTML = "Upgrade";
                     document
@@ -294,7 +293,7 @@ onAuthStateChanged(auth, (user) => {
                 });
               })
               .catch((error) => {
-             
+
               });
             getDocs(userCollections)
               .then((querySnapshot) => {
@@ -306,14 +305,14 @@ onAuthStateChanged(auth, (user) => {
                 });
               })
               .catch((error) => {
-              
+
               });
           } else {
           }
         });
       })
       .catch((error) => {
-   
+
       });
     const uid = user.uid;
     privateElements.forEach(function (element) {

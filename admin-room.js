@@ -76,54 +76,50 @@ let GForm = document.getElementById("geb_form");
 let AForm = document.getElementById("task_form");
 
 
+var companyName;
+
+var mitarbeiter_List = document.getElementById("mitarbeiter_select");
+var gebaude_List = document.getElementById("gebaude_select");
+const gebaudeDictionary = {};
 
 
 
-function handleGForm(e, user) {
+if (typeof GForm !== null) {
+  GForm.addEventListener("submit", handleGForm, true);
+}
+
+if (typeof AForm !== null) {
+  AForm.addEventListener("submit", handleAForm, true);
+}
+
+function handleGForm(e) {
   e.preventDefault();
   e.stopPropagation();
-  console.log("Gform");
-
-
   const street = document.getElementById("str_geb").value;
   const plz = document.getElementById("plz_geb").value;
   const location = document.getElementById("standort_geb").value;
 
-  const adminsRef = collection(db, "Admins");
-    getDocs(adminsRef)
-      .then((querySnapshot) => {
-        querySnapshot.forEach((docx) => {
-          if (docx.data().email === user.email) {
-            
+  const companiesDocRef = doc(
+    collection(db, "Companies"),
+    companyName
+  );
 
-            const companiesDocRef = doc(
-              collection(db, "Companies"),
-              docx.data().company
-             
-            );
-          
-            const newDocumentData2 = {
-              address: street,
-              city: location,
-              zipcode: plz,
-              counterelectricity: "0",
-              countergas:"0",
-              counterwater:"0",
-              information: "[[]]"
-          
-            };
-          
-            const newSubcollectionRef = collection(
-              companiesDocRef,
-              "Accesses"
-            );
-            addDoc(newSubcollectionRef, newDocumentData2);
-          
+  const newDocumentData2 = {
+    address: street,
+    city: location,
+    zipcode: plz,
+    counterelectricity: "0",
+    countergas: "0",
+    counterwater: "0",
+    information: "[[]]"
+  };
 
-          }
-        }
-        )
-      });
+  const newSubcollectionRef = collection(
+    companiesDocRef,
+    "Buildings"
+  );
+  addDoc(newSubcollectionRef, newDocumentData2);
+
 
 }
 
@@ -131,31 +127,67 @@ function handleAForm(e) {
   e.preventDefault();
   e.stopPropagation();
   console.log("Aform");
+
+  const titel_task = document.getElementById("titel_task").value;
+  const beschreibung_task = document.getElementById("beschreibung_task").value;
+  const time_task = document.getElementById("time_task").value;
+  const checked = document.querySelector('input[type=radio]:checked').value;
+
+  var mitarbeiterOption =
+    mitarbeiter_List.options[mitarbeiter_List.selectedIndex].value;
+
+  var gebaudeOption =
+    gebaude_List.options[gebaude_List.selectedIndex].value;
+  const house= gebaudeDictionary[gebaudeOption];
+  const formatted_gebaude= house.address+","+" ("+house.zipcode+")";
+  const companiesDocRef = doc(
+    collection(db, "Companies"),
+    companyName
+  );
+
+  const newDocumentData = {
+    assignee: mitarbeiterOption,
+    description: beschreibung_task,
+    title: titel_task,
+    issued: new Date(time_task),
+    building: formatted_gebaude,
+    buildingID: house.id,
+    done: new Date("2000-01-01T01:00:00+01:00"),
+    repeat: checked
+  };
+
+  const newSubcollectionRef = collection(
+    companiesDocRef,
+    "Tasks"
+  );
+  addDoc(newSubcollectionRef, newDocumentData);
+
+
+
+
 }
+
+
 
 onAuthStateChanged(auth, (user) => {
 
   let publicElements = document.querySelectorAll("[data-onlogin='hide']");
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
+
     const adminsRef = collection(db, "Admins");
     getDocs(adminsRef)
       .then((querySnapshot) => {
         querySnapshot.forEach((docx) => {
           if (docx.data().email === user.email) {
 
-            if (typeof GForm !== null) {
-              GForm.addEventListener("submit", handleGForm(e,user), true);
-            } 
-            
-            if (typeof AForm !== null) {
-              AForm.addEventListener("submit", handleAForm, true);
-            } 
+
 
 
             document.getElementById("user_name").innerHTML =
               docx.data().surname;
             document.getElementById("user_email").innerHTML = docx.data().email;
+            companyName = docx.data().company;
             document.getElementById("firma").innerHTML = docx.data().company;
             document.getElementById("vornameProfil").innerHTML =
               docx.data().surname;
@@ -163,17 +195,40 @@ onAuthStateChanged(auth, (user) => {
               docx.data().name;
             document.getElementById("emailProfil").innerHTML =
               docx.data().email;
-            //document.getElementById("telProfil").innerHTML = docx.data().phone;
+
             const companiesRef = collection(db, "Companies");
             const companyDoc = doc(companiesRef, docx.data().company);
             const userCollections = collection(companyDoc, "Users");
             const facilityCollections = collection(companyDoc, "Buildings");
+
             getDocs(facilityCollections)
               .then((querySnapshot) => {
                 const userList = document.querySelector("#facilityList");
+                var once = true;
                 var buttonContainer =
                   document.getElementById("button-container");
                 querySnapshot.forEach((docz) => {
+
+
+                  var opt3 = document.createElement("option");
+                  const addressString = docz.data().address +
+                    ", " +
+                    docz.data().zipcode +
+                    " " +
+                    docz.data().city
+                  opt3.text = addressString;
+                  gebaude_List.appendChild(opt3);
+
+                  const subDictionary = {
+                    address: docz.data().address,
+                    zipcode: docz.data().zipcode,
+                    city: docz.data().city,
+                    id: docz.id,
+                  };
+
+                  gebaudeDictionary[addressString] = subDictionary;
+
+
                   var button = document.createElement("button");
                   button.textContent =
                     docz.data().address +
@@ -249,6 +304,7 @@ onAuthStateChanged(auth, (user) => {
 
                   var userInput = document.createElement("select");
                   var defaultOption = document.createElement("option");
+
                   defaultOption.text = "Mitarbeiter auswählen";
                   defaultOption.disabled = true;
                   defaultOption.selected = true;
@@ -270,15 +326,29 @@ onAuthStateChanged(auth, (user) => {
                     })
                     .catch((error) => { });
                   userInput.appendChild(defaultOption);
+
                   getDocs(userCollections)
                     .then((querySnapshot) => {
                       querySnapshot.forEach((docUsers) => {
                         var opt = document.createElement("option");
                         opt.text = docUsers.data().email;
                         userInput.appendChild(opt);
+
+                        if (once) {
+                          var opt2 = document.createElement("option");
+                          opt2.text = docUsers.data().email;
+                          mitarbeiter_List.appendChild(opt2);
+                        }
+
+                        // mitarbeiter_List.appendChild(opt);
+
+
+
                       });
                     })
-                    .catch((error) => { });
+                    .catch((error) => { })
+                    .finally(() => once = false);
+
                   userInput.addEventListener("change", function () {
                     var selectedOption =
                       userInput.options[userInput.selectedIndex].value;

@@ -3,8 +3,6 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
   sendEmailVerification,
   deleteUser,
 } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-auth.js";
@@ -13,7 +11,6 @@ import {
   collection,
   doc,
   setDoc,
-  getDocs,
   addDoc,
   getDoc,
 } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-firestore.js";

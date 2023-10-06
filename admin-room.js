@@ -1,8 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-app.js";
 import {
   getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-auth.js";
@@ -10,12 +8,9 @@ import {
   getFirestore,
   collection,
   doc,
-  setDoc,
   getDocs,
-  getDoc,
-  limit,
-  query,
   updateDoc,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-firestore.js";
 import {
   getStorage,
@@ -77,21 +72,69 @@ function handleSignOut() {
 }
 
 
-let signUpForm = document.getElementById("geb_form");
+let GForm = document.getElementById("geb_form");
+let AForm = document.getElementById("task_form");
 
 
 
-if (typeof signUpForm !== null) {
-  signUpForm.addEventListener("submit", handleForm, true);
-} 
 
-function handleForm(e) {
+
+function handleGForm(e, user) {
   e.preventDefault();
   e.stopPropagation();
-  console.log("form");
+  console.log("Gform");
+
+
+  const street = document.getElementById("str_geb").value;
+  const plz = document.getElementById("plz_geb").value;
+  const location = document.getElementById("standort_geb").value;
+
+  const adminsRef = collection(db, "Admins");
+    getDocs(adminsRef)
+      .then((querySnapshot) => {
+        querySnapshot.forEach((docx) => {
+          if (docx.data().email === user.email) {
+            
+
+            const companiesDocRef = doc(
+              collection(db, "Companies"),
+              docx.data().company
+             
+            );
+          
+            const newDocumentData2 = {
+              address: street,
+              city: location,
+              zipcode: plz,
+              counterelectricity: "0",
+              countergas:"0",
+              counterwater:"0",
+              information: "[[]]"
+          
+            };
+          
+            const newSubcollectionRef = collection(
+              companiesDocRef,
+              "Accesses"
+            );
+            addDoc(newSubcollectionRef, newDocumentData2);
+          
+
+          }
+        }
+        )
+      });
+
+}
+
+function handleAForm(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  console.log("Aform");
 }
 
 onAuthStateChanged(auth, (user) => {
+
   let publicElements = document.querySelectorAll("[data-onlogin='hide']");
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
@@ -100,6 +143,16 @@ onAuthStateChanged(auth, (user) => {
       .then((querySnapshot) => {
         querySnapshot.forEach((docx) => {
           if (docx.data().email === user.email) {
+
+            if (typeof GForm !== null) {
+              GForm.addEventListener("submit", handleGForm(e,user), true);
+            } 
+            
+            if (typeof AForm !== null) {
+              AForm.addEventListener("submit", handleAForm, true);
+            } 
+
+
             document.getElementById("user_name").innerHTML =
               docx.data().surname;
             document.getElementById("user_email").innerHTML = docx.data().email;

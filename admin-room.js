@@ -95,6 +95,7 @@ if (typeof AForm !== null) {
 function handleGForm(e) {
   e.preventDefault();
   e.stopPropagation();
+
   const street = document.getElementById("str_geb").value;
   const plz = document.getElementById("plz_geb").value;
   const location = document.getElementById("standort_geb").value;

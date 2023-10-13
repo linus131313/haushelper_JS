@@ -132,6 +132,7 @@ function handleAForm(e) {
   const titel_task = document.getElementById("titel_task").value;
   const beschreibung_task = document.getElementById("beschreibung_task").value;
   const time_task = document.getElementById("time_task").value;
+  const time_end = document.getElementById("time_end").value;
   const checked = document.querySelector('input[type=radio]:checked').value;
 
   var mitarbeiterOption =
@@ -146,22 +147,94 @@ function handleAForm(e) {
     companyName
   );
 
-  const newDocumentData = {
-    assignee: mitarbeiterOption,
-    description: beschreibung_task,
-    title: titel_task,
-    issued: new Date(time_task),
-    building: formatted_gebaude,
-    buildingID: house.id,
-    done: new Date("2000-01-01T01:00:00+01:00"),
-    repeat: checked
-  };
+
 
   const newSubcollectionRef = collection(
     companiesDocRef,
     "Tasks"
   );
+  if (checked =="einmalig"){
+    const newDocumentData = {
+      assignee: mitarbeiterOption,
+      description: beschreibung_task,
+      title: titel_task,
+      issued: new Date(time_task),
+      building: formatted_gebaude,
+      buildingID: house.id,
+      done: new Date("2000-01-01T01:00:00+01:00"),
+      repeat: checked
+    };
   addDoc(newSubcollectionRef, newDocumentData);
+  }
+  if (checked =="täglich"){
+    var currentDate = new Date(time_task);
+    const endDate= new Date(time_end);
+
+    while (currentDate <= endDate) {
+      console.log(currentDate.toDateString()); 
+      
+      const newDocumentData = {
+        assignee: mitarbeiterOption,
+        description: beschreibung_task,
+        title: titel_task,
+        issued: new Date(currentDate),
+        building: formatted_gebaude,
+        buildingID: house.id,
+        done: new Date("2000-01-01T01:00:00+01:00"),
+        repeat: checked
+      };
+      addDoc(newSubcollectionRef, newDocumentData);
+
+      currentDate.setDate(currentDate.getDate() + 1); 
+    }
+    
+  }
+  if (checked =="wöchentlich"){
+    var currentDate = new Date(time_task);
+    const endDate= new Date(time_end);
+
+    while (currentDate <= endDate) {
+      console.log(currentDate.toDateString()); 
+    
+      const newDocumentData = {
+        assignee: mitarbeiterOption,
+        description: beschreibung_task,
+        title: titel_task,
+        issued: new Date(currentDate),
+        building: formatted_gebaude,
+        buildingID: house.id,
+        done: new Date("2000-01-01T01:00:00+01:00"),
+        repeat: checked
+      };
+      addDoc(newSubcollectionRef, newDocumentData);
+      currentDate.setDate(currentDate.getDate() + 7); 
+    }
+    
+
+  }
+  if (checked =="monatlich"){
+    var currentDate = new Date(time_task);
+    const endDate= new Date(time_end);
+
+    while (currentDate <= endDate) {
+      console.log(currentDate.toDateString()); 
+      
+      const newDocumentData = {
+        assignee: mitarbeiterOption,
+        description: beschreibung_task,
+        title: titel_task,
+        issued: new Date(currentDate),
+        building: formatted_gebaude,
+        buildingID: house.id,
+        done: new Date("2000-01-01T01:00:00+01:00"),
+        repeat: checked
+      };
+      addDoc(newSubcollectionRef, newDocumentData);
+      currentDate.setMonth(currentDate.getMonth() + 1); 
+    }
+    
+    
+  }
 
 
 

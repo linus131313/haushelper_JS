@@ -10,7 +10,7 @@ import {
   doc,
   getDocs,
   updateDoc,
-  addDoc
+  addDoc,
 } from "https://www.gstatic.com/firebasejs/9.4.1/firebase-firestore.js";
 import {
   getStorage,
@@ -33,6 +33,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+//calendar task dictionary
+var newEvents = {};
 
 let signOutButton = document.getElementById("signout-button");
 
@@ -59,30 +62,25 @@ async function getFirstFileNameInFolder(folderPath) {
       return null;
     }
   } catch (error) {
-
     throw error;
   }
 }
 function handleSignOut() {
   signOut(auth)
-    .then(() => { })
+    .then(() => {})
     .catch((error) => {
       const errorMessage = error.message;
     });
 }
 
-
 let GForm = document.getElementById("geb_form");
 let AForm = document.getElementById("task_form");
-
 
 var companyName;
 
 var mitarbeiter_List = document.getElementById("mitarbeiter_select");
 var gebaude_List = document.getElementById("gebaude_select");
 const gebaudeDictionary = {};
-
-
 
 if (typeof GForm !== null) {
   GForm.addEventListener("submit", handleGForm, true);
@@ -100,10 +98,7 @@ function handleGForm(e) {
   const plz = document.getElementById("plz_geb").value;
   const location = document.getElementById("standort_geb").value;
 
-  const companiesDocRef = doc(
-    collection(db, "Companies"),
-    companyName
-  );
+  const companiesDocRef = doc(collection(db, "Companies"), companyName);
 
   const newDocumentData2 = {
     address: street,
@@ -112,16 +107,11 @@ function handleGForm(e) {
     counterelectricity: "0",
     countergas: "0",
     counterwater: "0",
-    information: "[[]]"
+    information: "[[]]",
   };
 
-  const newSubcollectionRef = collection(
-    companiesDocRef,
-    "Buildings"
-  );
+  const newSubcollectionRef = collection(companiesDocRef, "Buildings");
   addDoc(newSubcollectionRef, newDocumentData2);
-
-
 }
 
 function handleAForm(e) {
@@ -133,27 +123,18 @@ function handleAForm(e) {
   const beschreibung_task = document.getElementById("beschreibung_task").value;
   const time_task = document.getElementById("time_task").value;
   const time_end = document.getElementById("time_end").value;
-  const checked = document.querySelector('input[type=radio]:checked').value;
+  const checked = document.querySelector("input[type=radio]:checked").value;
 
   var mitarbeiterOption =
     mitarbeiter_List.options[mitarbeiter_List.selectedIndex].value;
 
-  var gebaudeOption =
-    gebaude_List.options[gebaude_List.selectedIndex].value;
-  const house= gebaudeDictionary[gebaudeOption];
-  const formatted_gebaude= house.address+","+" ("+house.zipcode+")";
-  const companiesDocRef = doc(
-    collection(db, "Companies"),
-    companyName
-  );
+  var gebaudeOption = gebaude_List.options[gebaude_List.selectedIndex].value;
+  const house = gebaudeDictionary[gebaudeOption];
+  const formatted_gebaude = house.address + "," + " (" + house.zipcode + ")";
+  const companiesDocRef = doc(collection(db, "Companies"), companyName);
 
-
-
-  const newSubcollectionRef = collection(
-    companiesDocRef,
-    "Tasks"
-  );
-  if (checked =="einmalig"){
+  const newSubcollectionRef = collection(companiesDocRef, "Tasks");
+  if (checked == "einmalig") {
     const newDocumentData = {
       assignee: mitarbeiterOption,
       description: beschreibung_task,
@@ -162,17 +143,17 @@ function handleAForm(e) {
       building: formatted_gebaude,
       buildingID: house.id,
       done: new Date("2000-01-01T01:00:00+01:00"),
-      repeat: checked
+      repeat: checked,
     };
-  addDoc(newSubcollectionRef, newDocumentData);
+    addDoc(newSubcollectionRef, newDocumentData);
   }
-  if (checked =="täglich"){
+  if (checked == "täglich") {
     var currentDate = new Date(time_task);
-    const endDate= new Date(time_end);
+    const endDate = new Date(time_end);
 
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString()); 
-      
+      console.log(currentDate.toDateString());
+
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -181,21 +162,20 @@ function handleAForm(e) {
         building: formatted_gebaude,
         buildingID: house.id,
         done: new Date("2000-01-01T01:00:00+01:00"),
-        repeat: checked
+        repeat: checked,
       };
       addDoc(newSubcollectionRef, newDocumentData);
 
-      currentDate.setDate(currentDate.getDate() + 1); 
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    
   }
-  if (checked =="wöchentlich"){
+  if (checked == "wöchentlich") {
     var currentDate = new Date(time_task);
-    const endDate= new Date(time_end);
+    const endDate = new Date(time_end);
 
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString()); 
-    
+      console.log(currentDate.toDateString());
+
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -204,21 +184,19 @@ function handleAForm(e) {
         building: formatted_gebaude,
         buildingID: house.id,
         done: new Date("2000-01-01T01:00:00+01:00"),
-        repeat: checked
+        repeat: checked,
       };
       addDoc(newSubcollectionRef, newDocumentData);
-      currentDate.setDate(currentDate.getDate() + 7); 
+      currentDate.setDate(currentDate.getDate() + 7);
     }
-    
-
   }
-  if (checked =="monatlich"){
+  if (checked == "monatlich") {
     var currentDate = new Date(time_task);
-    const endDate= new Date(time_end);
+    const endDate = new Date(time_end);
 
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString()); 
-      
+      console.log(currentDate.toDateString());
+
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -227,37 +205,23 @@ function handleAForm(e) {
         building: formatted_gebaude,
         buildingID: house.id,
         done: new Date("2000-01-01T01:00:00+01:00"),
-        repeat: checked
+        repeat: checked,
       };
       addDoc(newSubcollectionRef, newDocumentData);
-      currentDate.setMonth(currentDate.getMonth() + 1); 
+      currentDate.setMonth(currentDate.getMonth() + 1);
     }
-    
-    
   }
-
-
-
-
 }
 
-
-
 onAuthStateChanged(auth, (user) => {
-
   let publicElements = document.querySelectorAll("[data-onlogin='hide']");
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
-
     const adminsRef = collection(db, "Admins");
     getDocs(adminsRef)
       .then((querySnapshot) => {
         querySnapshot.forEach((docx) => {
           if (docx.data().email === user.email) {
-
-
-
-
             document.getElementById("user_name").innerHTML =
               docx.data().surname;
             document.getElementById("user_email").innerHTML = docx.data().email;
@@ -275,6 +239,33 @@ onAuthStateChanged(auth, (user) => {
             const userCollections = collection(companyDoc, "Users");
             const facilityCollections = collection(companyDoc, "Buildings");
 
+            //Tasks für Kalender anlegen
+            const taskCollection = collection(companyDoc, "Tasks");
+            getDocs(taskCollection)
+              .then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                  querySnapshot.forEach((taskdoc) => {
+                    newEvents[taskdoc.id] = {
+                      "worker": taskdoc.data().assignee,
+                      "title": taskdoc.data().title,
+                      "description": taskdoc.data().description,
+                      "start": taskdoc.data().issued,
+                      "end": taskdoc.data().issued,
+                      "repeat": taskdoc.data().repeat,
+                      "done": taskdoc.data().done,
+                      "building": taskdoc.data().building,
+                      "buildingID": taskdoc.data().buildingID,
+                    };
+                  });
+
+                  console.log(newEvents);
+                  renderCalendar(newEvents);
+                }
+              })
+              .catch((error) => {
+                console.log(error.message);
+              });
+
             getDocs(facilityCollections)
               .then((querySnapshot) => {
                 const userList = document.querySelector("#facilityList");
@@ -282,14 +273,13 @@ onAuthStateChanged(auth, (user) => {
                 var buttonContainer =
                   document.getElementById("button-container");
                 querySnapshot.forEach((docz) => {
-
-
                   var opt3 = document.createElement("option");
-                  const addressString = docz.data().address +
+                  const addressString =
+                    docz.data().address +
                     ", " +
                     docz.data().zipcode +
                     " " +
-                    docz.data().city
+                    docz.data().city;
                   opt3.text = addressString;
                   gebaude_List.appendChild(opt3);
 
@@ -301,7 +291,6 @@ onAuthStateChanged(auth, (user) => {
                   };
 
                   gebaudeDictionary[addressString] = subDictionary;
-
 
                   var button = document.createElement("button");
                   button.textContent =
@@ -353,11 +342,11 @@ onAuthStateChanged(auth, (user) => {
                                 filePath + "/" + fileName
                               );
                               deleteObject(desertRef)
-                                .then(() => { })
-                                .catch((error) => { });
+                                .then(() => {})
+                                .catch((error) => {});
                             }
                           })
-                          .catch((error) => { });
+                          .catch((error) => {});
 
                         const storageRef = ref(
                           storage,
@@ -365,7 +354,7 @@ onAuthStateChanged(auth, (user) => {
                         );
                         uploadBytes(storageRef, file);
                         location.reload();
-                      } catch (error) { }
+                      } catch (error) {}
                     }
                   });
 
@@ -387,8 +376,9 @@ onAuthStateChanged(auth, (user) => {
                     .then((querySnapshot) => {
                       const firstDocument = querySnapshot.docs[0];
                       const existingData = firstDocument.data();
-                      const address = `${docz.data().address}, (${docz.data().zipcode
-                        })`;
+                      const address = `${docz.data().address}, (${
+                        docz.data().zipcode
+                      })`;
                       if (!querySnapshot.empty) {
                         if (
                           existingData.employeeCalendar[address] != undefined
@@ -398,7 +388,7 @@ onAuthStateChanged(auth, (user) => {
                         }
                       }
                     })
-                    .catch((error) => { });
+                    .catch((error) => {});
                   userInput.appendChild(defaultOption);
 
                   getDocs(userCollections)
@@ -415,13 +405,10 @@ onAuthStateChanged(auth, (user) => {
                         }
 
                         // mitarbeiter_List.appendChild(opt);
-
-
-
                       });
                     })
-                    .catch((error) => { })
-                    .finally(() => once = false);
+                    .catch((error) => {})
+                    .finally(() => (once = false));
 
                   userInput.addEventListener("change", function () {
                     var selectedOption =
@@ -430,8 +417,9 @@ onAuthStateChanged(auth, (user) => {
                       .then((querySnapshot) => {
                         const firstDocument = querySnapshot.docs[0];
                         const existingData = firstDocument.data();
-                        const address = `${docz.data().address}, (${docz.data().zipcode
-                          })`;
+                        const address = `${docz.data().address}, (${
+                          docz.data().zipcode
+                        })`;
                         if (!querySnapshot.empty) {
                           const newData = {
                             ...existingData,
@@ -441,17 +429,12 @@ onAuthStateChanged(auth, (user) => {
                             },
                           };
                           updateDoc(firstDocument.ref, newData)
-                            .then((firstDocument) => { })
-                            .catch((error) => {
-
-                            });
+                            .then((firstDocument) => {})
+                            .catch((error) => {});
                         } else {
-
                         }
                       })
-                      .catch((error) => {
-
-                      });
+                      .catch((error) => {});
                   });
                   button.appendChild(userInput);
                   buttonContainer.appendChild(button);
@@ -465,7 +448,7 @@ onAuthStateChanged(auth, (user) => {
                   userList.appendChild(listItem);
                 });
               })
-              .catch((error) => { });
+              .catch((error) => {});
             const companyCollections = collection(companyDoc, "Accesses");
             getDocs(companyCollections)
               .then((querySnapshot) => {
@@ -504,9 +487,7 @@ onAuthStateChanged(auth, (user) => {
                   document.getElementById("date").innerHTML = dateString;
                 });
               })
-              .catch((error) => {
-
-              });
+              .catch((error) => {});
             getDocs(userCollections)
               .then((querySnapshot) => {
                 const userList = document.querySelector("#userList");
@@ -516,16 +497,12 @@ onAuthStateChanged(auth, (user) => {
                   userList.appendChild(listItem);
                 });
               })
-              .catch((error) => {
-
-              });
+              .catch((error) => {});
           } else {
           }
         });
       })
-      .catch((error) => {
-
-      });
+      .catch((error) => {});
     const uid = user.uid;
     privateElements.forEach(function (element) {
       element.style.display = "initial";
@@ -543,3 +520,56 @@ onAuthStateChanged(auth, (user) => {
     });
   }
 });
+
+function renderCalendar(events) {
+  
+  console.log("Rendering: " + events);
+  document.addEventListener("DOMContentLoaded", function () {
+    var eventList = [];
+    for (let id in events) {
+      eventList.push({
+        title: events[id]["title"],
+        id: id,
+        backgroundColor: "orange",
+        borderColor: "white",
+        start: events[id]["start"],
+        end: events[id]["end"],
+        allDay: false,
+      });
+    }
+    var calendarEl = document.getElementById("calendar");
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "timeGridWeek",
+      nowIndicator: true,
+      eventLimit: true,
+      views: {
+        agenda: {
+          eventLimit: 4,
+        },
+      },
+
+      allDayText: "Ganztägig",
+      initialDate: new Date(),
+      locale: "de",
+      events: eventList,
+
+      buttonText: {
+        today: "Heute",
+        month: "Monat",
+        week: "Woche",
+        day: "Tag",
+      },
+      headerToolbar: {
+        left: "prev,next",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay",
+      },
+      timeFormat: "h:mm",
+      eventClick: function (c, jsEvent, view) {
+        //c.id
+        console.log(c);
+      },
+    });
+    calendar.render();
+  });
+}

@@ -608,11 +608,15 @@ function getRandomColor(worker) {
   if (workerColors.hasOwnProperty(worker)) {
     return workerColors[worker];
   }
-  
-  const randomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
-  
-  const bgColor = randomColor();
-  const textColor = parseInt(bgColor.replace(/^#/, ''), 16) > 0xffffff / 2 ? "#000000" : "#ffffff";
+
+  const randomHue = Math.floor(Math.random() * 360); 
+  const saturation = 70 + Math.random() * 10; 
+  const lightness = 50 + Math.random() * 10; 
+
+  // Konvertiere HSL-Farbe in Hex
+  const bgColor = `hsl(${randomHue}, ${saturation}%, ${lightness}%)`;
+  const textColor = lightness > 60 ? "#000000" : "#ffffff";
+
   workerColors[worker]={bgColor,textColor};
 
   return { bgColor, textColor };

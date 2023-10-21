@@ -34,8 +34,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-//calendar task dictionary
 var newEvents = {};
+var workerColors={};
 
 let signOutButton = document.getElementById("signout-button");
 
@@ -78,6 +78,7 @@ let AForm = document.getElementById("task_form");
 
 var companyName;
 
+var mitarbeiter_Calender_Select = document.getElementById("worker_cal_select");
 var mitarbeiter_List = document.getElementById("mitarbeiter_select");
 var gebaude_List = document.getElementById("gebaude_select");
 const gebaudeDictionary = {};
@@ -93,13 +94,10 @@ if (typeof AForm !== null) {
 function handleGForm(e) {
   e.preventDefault();
   e.stopPropagation();
-
   const street = document.getElementById("str_geb").value;
   const plz = document.getElementById("plz_geb").value;
   const location = document.getElementById("standort_geb").value;
-
   const companiesDocRef = doc(collection(db, "Companies"), companyName);
-
   const newDocumentData2 = {
     address: street,
     city: location,
@@ -109,7 +107,6 @@ function handleGForm(e) {
     counterwater: "0",
     information: "[[]]",
   };
-
   const newSubcollectionRef = collection(companiesDocRef, "Buildings");
   addDoc(newSubcollectionRef, newDocumentData2);
 }
@@ -117,22 +114,17 @@ function handleGForm(e) {
 function handleAForm(e) {
   e.preventDefault();
   e.stopPropagation();
-  console.log("Aform");
-
   const titel_task = document.getElementById("titel_task").value;
   const beschreibung_task = document.getElementById("beschreibung_task").value;
   const time_task = document.getElementById("time_task").value;
   const time_end = document.getElementById("time_end").value;
   const checked = document.querySelector("input[type=radio]:checked").value;
-
   var mitarbeiterOption =
     mitarbeiter_List.options[mitarbeiter_List.selectedIndex].value;
-
   var gebaudeOption = gebaude_List.options[gebaude_List.selectedIndex].value;
   const house = gebaudeDictionary[gebaudeOption];
   const formatted_gebaude = house.address + "," + " (" + house.zipcode + ")";
   const companiesDocRef = doc(collection(db, "Companies"), companyName);
-
   const newSubcollectionRef = collection(companiesDocRef, "Tasks");
   if (checked == "einmalig") {
     const newDocumentData = {
@@ -150,10 +142,7 @@ function handleAForm(e) {
   if (checked == "täglich") {
     var currentDate = new Date(time_task);
     const endDate = new Date(time_end);
-
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString());
-
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -165,17 +154,13 @@ function handleAForm(e) {
         repeat: checked,
       };
       addDoc(newSubcollectionRef, newDocumentData);
-
       currentDate.setDate(currentDate.getDate() + 1);
     }
   }
   if (checked == "wöchentlich") {
     var currentDate = new Date(time_task);
     const endDate = new Date(time_end);
-
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString());
-
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -193,10 +178,7 @@ function handleAForm(e) {
   if (checked == "monatlich") {
     var currentDate = new Date(time_task);
     const endDate = new Date(time_end);
-
     while (currentDate <= endDate) {
-      console.log(currentDate.toDateString());
-
       const newDocumentData = {
         assignee: mitarbeiterOption,
         description: beschreibung_task,
@@ -218,291 +200,265 @@ onAuthStateChanged(auth, (user) => {
   let privateElements = document.querySelectorAll("[data-onlogin='show']");
   if (user) {
     const adminsRef = collection(db, "Admins");
-    getDocs(adminsRef)
-      .then((querySnapshot) => {
-        querySnapshot.forEach((docx) => {
-          if (docx.data().email === user.email) {
-            document.getElementById("user_name").innerHTML =
-              docx.data().surname;
-            document.getElementById("user_email").innerHTML = docx.data().email;
-            companyName = docx.data().company;
-            document.getElementById("firma").innerHTML = docx.data().company;
-            document.getElementById("vornameProfil").innerHTML =
-              docx.data().surname;
-            document.getElementById("nachnameProfil").innerHTML =
-              docx.data().name;
-            document.getElementById("emailProfil").innerHTML =
-              docx.data().email;
+    getDocs(adminsRef).then((querySnapshot) => {
+      querySnapshot.forEach((docx) => {
+        if (docx.data().email === user.email) {
+          document.getElementById("user_name").innerHTML = docx.data().surname;
+          document.getElementById("user_email").innerHTML = docx.data().email;
+          companyName = docx.data().company;
+          document.getElementById("firma").innerHTML = docx.data().company;
+          document.getElementById("vornameProfil").innerHTML =
+            docx.data().surname;
+          document.getElementById("nachnameProfil").innerHTML =
+            docx.data().name;
+          document.getElementById("emailProfil").innerHTML = docx.data().email;
 
-            const companiesRef = collection(db, "Companies");
-            const companyDoc = doc(companiesRef, docx.data().company);
-            const userCollections = collection(companyDoc, "Users");
-            const facilityCollections = collection(companyDoc, "Buildings");
+          const companiesRef = collection(db, "Companies");
+          const companyDoc = doc(companiesRef, docx.data().company);
+          const userCollections = collection(companyDoc, "Users");
+          const facilityCollections = collection(companyDoc, "Buildings");
 
-            //Tasks für Kalender anlegen
-            const taskCollection = collection(companyDoc, "Tasks");
-            getDocs(taskCollection)
-              .then((querySnapshot) => {
-                if (!querySnapshot.empty) {
-                  querySnapshot.forEach((taskdoc) => {
-                    newEvents[taskdoc.id] = {
-                      "worker": taskdoc.data().assignee,
-                      "title": taskdoc.data().title,
-                      "description": taskdoc.data().description,
-                      "start": taskdoc.data().issued,
-                      "end": taskdoc.data().issued,
-                      "repeat": taskdoc.data().repeat,
-                      "done": taskdoc.data().done,
-                      "building": taskdoc.data().building,
-                      "buildingID": taskdoc.data().buildingID,
-                    };
-                  });
-
-                  console.log(newEvents);
-                  renderCalendar(newEvents);
-                }
-              })
-              .catch((error) => {
-                console.log(error.message);
+          const taskCollection = collection(companyDoc, "Tasks");
+          getDocs(taskCollection).then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+              querySnapshot.forEach((taskdoc) => {
+                
+const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
+                newEvents[taskdoc.id] = {
+                  worker: taskdoc.data().assignee,
+                  title: taskdoc.data().title,
+                  description: taskdoc.data().description,
+                  start: taskdoc.data().issued,
+                  end: taskdoc.data().issued,
+                  repeat: taskdoc.data().repeat,
+                  done: taskdoc.data().done,
+                  building: taskdoc.data().building,
+                  buildingID: taskdoc.data().buildingID,
+                  backgroudColor: bgColor,
+                  textColor:  textColor,
+                };
               });
 
-            getDocs(facilityCollections)
-              .then((querySnapshot) => {
-                const userList = document.querySelector("#facilityList");
-                var once = true;
-                var buttonContainer =
-                  document.getElementById("button-container");
-                querySnapshot.forEach((docz) => {
-                  var opt3 = document.createElement("option");
-                  const addressString =
-                    docz.data().address +
-                    ", " +
-                    docz.data().zipcode +
-                    " " +
-                    docz.data().city;
-                  opt3.text = addressString;
-                  gebaude_List.appendChild(opt3);
+              renderCalendar(newEvents);
+            }
+          });
 
-                  const subDictionary = {
-                    address: docz.data().address,
-                    zipcode: docz.data().zipcode,
-                    city: docz.data().city,
-                    id: docz.id,
-                  };
+          getDocs(facilityCollections).then((querySnapshot) => {
+            const userList = document.querySelector("#facilityList");
+            var once = true;
+            var buttonContainer = document.getElementById("button-container");
+            querySnapshot.forEach((docz) => {
+              var opt3 = document.createElement("option");
+              const addressString =
+                docz.data().address +
+                ", " +
+                docz.data().zipcode +
+                " " +
+                docz.data().city;
+              opt3.text = addressString;
+              gebaude_List.appendChild(opt3);
 
-                  gebaudeDictionary[addressString] = subDictionary;
+              const subDictionary = {
+                address: docz.data().address,
+                zipcode: docz.data().zipcode,
+                city: docz.data().city,
+                id: docz.id,
+              };
 
-                  var button = document.createElement("button");
-                  button.textContent =
-                    docz.data().address +
-                    ", " +
-                    docz.data().zipcode +
-                    " " +
-                    docz.data().city +
-                    "  ";
-                  const filePath =
-                    docx.data().company +
-                    "/" +
-                    docz.data().address +
-                    ", (" +
-                    docz.data().zipcode +
-                    ")/Calendar";
+              gebaudeDictionary[addressString] = subDictionary;
 
-                  var fileInput = document.createElement("input");
-                  fileInput.type = "file";
-                  fileInput.accept = ".ics";
+              var button = document.createElement("button");
+              button.textContent =
+                docz.data().address +
+                ", " +
+                docz.data().zipcode +
+                " " +
+                docz.data().city +
+                "  ";
+              const filePath =
+                docx.data().company +
+                "/" +
+                docz.data().address +
+                ", (" +
+                docz.data().zipcode +
+                ")/Calendar";
 
-                  const label = document.createElement("label");
-                  const label2 = document.createElement("label");
+              var fileInput = document.createElement("input");
+              fileInput.type = "file";
+              fileInput.accept = ".ics";
 
-                  getFirstFileNameInFolder(filePath)
-                    .then(({ fileName, modifiedDate }) => {
-                      if (fileName) {
-                        label.textContent = fileName;
-                        label2.textContent = "  Vom: " + modifiedDate;
-                      } else {
-                        label.textContent = "Kein Abfuhrplan hochgeladen.";
+              const label = document.createElement("label");
+              const label2 = document.createElement("label");
+
+              getFirstFileNameInFolder(filePath)
+                .then(({ fileName, modifiedDate }) => {
+                  if (fileName) {
+                    label.textContent = fileName;
+                    label2.textContent = "  Vom: " + modifiedDate;
+                  } else {
+                    label.textContent = "Kein Abfuhrplan hochgeladen.";
+                  }
+                })
+                .catch((error) => {
+                  label.textContent = "Kein Abfuhrplan hochgeladen.";
+                });
+              fileInput.addEventListener("change", function () {
+                var file = fileInput.files[0];
+                if (file.type !== "text/calendar") {
+                  alert("Bitte laden Sie nur .ics-Dateien hoch!");
+                  fileInput.value = "";
+                } else {
+                  try {
+                    getFirstFileNameInFolder(filePath).then(
+                      ({ fileName, modifiedDate }) => {
+                        if (fileName) {
+                          const desertRef = ref(
+                            storage,
+                            filePath + "/" + fileName
+                          );
+                          deleteObject(desertRef).then(() => {});
+                        }
                       }
-                    })
-                    .catch((error) => {
-                      label.textContent = "Kein Abfuhrplan hochgeladen.";
-                    });
-                  fileInput.addEventListener("change", function () {
-                    var file = fileInput.files[0];
-                    if (file.type !== "text/calendar") {
-                      alert("Bitte laden Sie nur .ics-Dateien hoch!");
-                      fileInput.value = "";
-                    } else {
-                      try {
-                        getFirstFileNameInFolder(filePath)
-                          .then(({ fileName, modifiedDate }) => {
-                            if (fileName) {
-                              const desertRef = ref(
-                                storage,
-                                filePath + "/" + fileName
-                              );
-                              deleteObject(desertRef)
-                                .then(() => {})
-                                .catch((error) => {});
-                            }
-                          })
-                          .catch((error) => {});
+                    );
 
-                        const storageRef = ref(
-                          storage,
-                          filePath + "/" + file.name
-                        );
-                        uploadBytes(storageRef, file);
-                        location.reload();
-                      } catch (error) {}
+                    const storageRef = ref(storage, filePath + "/" + file.name);
+                    uploadBytes(storageRef, file);
+                    location.reload();
+                  } catch (error) {}
+                }
+              });
+
+              const inputWrapper = document.createElement("div");
+              inputWrapper.classList.add("input-wrapper");
+              inputWrapper.appendChild(fileInput);
+              inputWrapper.appendChild(label);
+              inputWrapper.appendChild(label2);
+              button.appendChild(inputWrapper);
+
+              var userInput = document.createElement("select");
+              var defaultOption = document.createElement("option");
+
+              defaultOption.text = "Mitarbeiter auswählen";
+              defaultOption.disabled = true;
+              defaultOption.selected = true;
+              const accessCollection = collection(companyDoc, "Accesses");
+              getDocs(accessCollection).then((querySnapshot) => {
+                const firstDocument = querySnapshot.docs[0];
+                const existingData = firstDocument.data();
+                const address = `${docz.data().address}, (${
+                  docz.data().zipcode
+                })`;
+                if (!querySnapshot.empty) {
+                  if (existingData.employeeCalendar[address] != undefined) {
+                    defaultOption.text = existingData.employeeCalendar[address];
+                  }
+                }
+              });
+              userInput.appendChild(defaultOption);
+
+              getDocs(userCollections)
+                .then((querySnapshot) => {
+                  querySnapshot.forEach((docUsers) => {
+                    var opt = document.createElement("option");
+                    opt.text = docUsers.data().email;
+                    userInput.appendChild(opt);
+
+                    if (once) {
+                      var opt2 = document.createElement("option");
+                      opt2.text = docUsers.data().email;
+                      mitarbeiter_List.appendChild(opt2);
+
+                      mitarbeiter_Calender_Select.appendChild(opt2);
                     }
+
+                    // mitarbeiter_List.appendChild(opt);
                   });
+                })
+                .catch((error) => {})
+                .finally(() => (once = false));
 
-                  const inputWrapper = document.createElement("div");
-                  inputWrapper.classList.add("input-wrapper");
-                  inputWrapper.appendChild(fileInput);
-                  inputWrapper.appendChild(label);
-                  inputWrapper.appendChild(label2);
-                  button.appendChild(inputWrapper);
+              userInput.addEventListener("change", function () {
+                var selectedOption =
+                  userInput.options[userInput.selectedIndex].value;
+                getDocs(accessCollection).then((querySnapshot) => {
+                  const firstDocument = querySnapshot.docs[0];
+                  const existingData = firstDocument.data();
+                  const address = `${docz.data().address}, (${
+                    docz.data().zipcode
+                  })`;
+                  if (!querySnapshot.empty) {
+                    const newData = {
+                      ...existingData,
+                      employeeCalendar: {
+                        ...existingData.employeeCalendar,
+                        [address]: selectedOption,
+                      },
+                    };
+                    updateDoc(firstDocument.ref, newData).then(
+                      (firstDocument) => {}
+                    );
+                  } else {
+                  }
+                });
+              });
+              button.appendChild(userInput);
+              buttonContainer.appendChild(button);
+              const listItem = document.createElement("li");
+              listItem.textContent =
+                docz.data().address +
+                ", " +
+                docz.data().zipcode +
+                " " +
+                docz.data().city;
+              userList.appendChild(listItem);
+            });
+          });
+          const companyCollections = collection(companyDoc, "Accesses");
+          getDocs(companyCollections).then((querySnapshot) => {
+            querySnapshot.forEach((docy) => {
+              const dte = new Date(docy.data().canceled * 1000);
+              var status = "Aktiv";
+              if (dte instanceof Date && !isNaN(dte)) {
+                status = "Gekündigt bis zum " + dte.toLocaleString("de-DE");
+              }
+              document.getElementById("status").innerHTML = status;
+              document.getElementById("abo").innerHTML = docy.data().aboName;
 
-                  var userInput = document.createElement("select");
-                  var defaultOption = document.createElement("option");
-
-                  defaultOption.text = "Mitarbeiter auswählen";
-                  defaultOption.disabled = true;
-                  defaultOption.selected = true;
-                  const accessCollection = collection(companyDoc, "Accesses");
-                  getDocs(accessCollection)
-                    .then((querySnapshot) => {
-                      const firstDocument = querySnapshot.docs[0];
-                      const existingData = firstDocument.data();
-                      const address = `${docz.data().address}, (${
-                        docz.data().zipcode
-                      })`;
-                      if (!querySnapshot.empty) {
-                        if (
-                          existingData.employeeCalendar[address] != undefined
-                        ) {
-                          defaultOption.text =
-                            existingData.employeeCalendar[address];
-                        }
-                      }
-                    })
-                    .catch((error) => {});
-                  userInput.appendChild(defaultOption);
-
-                  getDocs(userCollections)
-                    .then((querySnapshot) => {
-                      querySnapshot.forEach((docUsers) => {
-                        var opt = document.createElement("option");
-                        opt.text = docUsers.data().email;
-                        userInput.appendChild(opt);
-
-                        if (once) {
-                          var opt2 = document.createElement("option");
-                          opt2.text = docUsers.data().email;
-                          mitarbeiter_List.appendChild(opt2);
-                        }
-
-                        // mitarbeiter_List.appendChild(opt);
-                      });
-                    })
-                    .catch((error) => {})
-                    .finally(() => (once = false));
-
-                  userInput.addEventListener("change", function () {
-                    var selectedOption =
-                      userInput.options[userInput.selectedIndex].value;
-                    getDocs(accessCollection)
-                      .then((querySnapshot) => {
-                        const firstDocument = querySnapshot.docs[0];
-                        const existingData = firstDocument.data();
-                        const address = `${docz.data().address}, (${
-                          docz.data().zipcode
-                        })`;
-                        if (!querySnapshot.empty) {
-                          const newData = {
-                            ...existingData,
-                            employeeCalendar: {
-                              ...existingData.employeeCalendar,
-                              [address]: selectedOption,
-                            },
-                          };
-                          updateDoc(firstDocument.ref, newData)
-                            .then((firstDocument) => {})
-                            .catch((error) => {});
-                        } else {
-                        }
-                      })
-                      .catch((error) => {});
+              if (docy.data().aboName == "Testpaket") {
+                document.getElementById("aboButton").innerHTML = "Upgrade";
+                document
+                  .getElementById("aboButton")
+                  .addEventListener("click", () => {
+                    const link = document.getElementById("aboButton");
+                    link.href = "https://www.haushelper.de/upgrade-testpaket";
                   });
-                  button.appendChild(userInput);
-                  buttonContainer.appendChild(button);
-                  const listItem = document.createElement("li");
-                  listItem.textContent =
-                    docz.data().address +
-                    ", " +
-                    docz.data().zipcode +
-                    " " +
-                    docz.data().city;
-                  userList.appendChild(listItem);
-                });
-              })
-              .catch((error) => {});
-            const companyCollections = collection(companyDoc, "Accesses");
-            getDocs(companyCollections)
-              .then((querySnapshot) => {
-                querySnapshot.forEach((docy) => {
-                  const dte = new Date(docy.data().canceled * 1000);
-                  var status = "Aktiv";
-                  if (dte instanceof Date && !isNaN(dte)) {
-                    status = "Gekündigt bis zum " + dte.toLocaleString("de-DE");
-                  }
-                  document.getElementById("status").innerHTML = status;
-                  document.getElementById("abo").innerHTML =
-                    docy.data().aboName;
+              }
 
-                  if (docy.data().aboName == "Testpaket") {
-                    document.getElementById("aboButton").innerHTML = "Upgrade";
-                    document
-                      .getElementById("aboButton")
-                      .addEventListener("click", () => {
-                        const link = document.getElementById("aboButton");
-                        link.href =
-                          "https://www.haushelper.de/upgrade-testpaket";
-                      });
-                  }
-
-                  document.getElementById("mitarbeiterX").innerHTML =
-                    docy.data().userAvailable;
-                  document.getElementById("mitarbeiterY").innerHTML =
-                    docy.data().userInit;
-                  document.getElementById("gebaudeX").innerHTML =
-                    docy.data().facilityAvailable;
-                  document.getElementById("gebaudeY").innerHTML =
-                    docy.data().facilityInit;
-                  const timestamp_purchased = docy.data().purchased;
-                  const date = new Date(timestamp_purchased.seconds * 1000);
-                  const dateString = date.toLocaleDateString();
-                  document.getElementById("date").innerHTML = dateString;
-                });
-              })
-              .catch((error) => {});
-            getDocs(userCollections)
-              .then((querySnapshot) => {
-                const userList = document.querySelector("#userList");
-                querySnapshot.forEach((docw) => {
-                  const listItem = document.createElement("li");
-                  listItem.textContent = docw.data().name;
-                  userList.appendChild(listItem);
-                });
-              })
-              .catch((error) => {});
-          } else {
-          }
-        });
-      })
-      .catch((error) => {});
+              document.getElementById("mitarbeiterX").innerHTML =
+                docy.data().userAvailable;
+              document.getElementById("mitarbeiterY").innerHTML =
+                docy.data().userInit;
+              document.getElementById("gebaudeX").innerHTML =
+                docy.data().facilityAvailable;
+              document.getElementById("gebaudeY").innerHTML =
+                docy.data().facilityInit;
+              const timestamp_purchased = docy.data().purchased;
+              const date = new Date(timestamp_purchased.seconds * 1000);
+              const dateString = date.toLocaleDateString();
+              document.getElementById("date").innerHTML = dateString;
+            });
+          });
+          getDocs(userCollections).then((querySnapshot) => {
+            const userList = document.querySelector("#userList");
+            querySnapshot.forEach((docw) => {
+              const listItem = document.createElement("li");
+              listItem.textContent = docw.data().name;
+              userList.appendChild(listItem);
+            });
+          });
+        }
+      });
+    });
     const uid = user.uid;
     privateElements.forEach(function (element) {
       element.style.display = "initial";
@@ -522,54 +478,143 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function renderCalendar(events) {
-  
-  console.log("Rendering: " + events);
-  document.addEventListener("DOMContentLoaded", function () {
-    var eventList = [];
-    for (let id in events) {
-      eventList.push({
-        title: events[id]["title"],
-        id: id,
-        backgroundColor: "orange",
-        borderColor: "white",
-        start: events[id]["start"],
-        end: events[id]["end"],
-        allDay: false,
-      });
-    }
-    var calendarEl = document.getElementById("calendar");
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: "timeGridWeek",
-      nowIndicator: true,
-      eventLimit: true,
-      views: {
-        agenda: {
-          eventLimit: 4,
-        },
-      },
+  let eventList = [];
 
-      allDayText: "Ganztägig",
-      initialDate: new Date(),
-      locale: "de",
-      events: eventList,
-
-      buttonText: {
-        today: "Heute",
-        month: "Monat",
-        week: "Woche",
-        day: "Tag",
-      },
-      headerToolbar: {
-        left: "prev,next",
-        center: "title",
-        right: "dayGridMonth,timeGridWeek,timeGridDay",
-      },
-      timeFormat: "h:mm",
-      eventClick: function (c, jsEvent, view) {
-        //c.id
-        console.log(c);
-      },
+  for (let id in events) {
+    eventList.push({
+      title: events[id]["title"],
+      id: id,
+      
+      backgroundColor: events[id]["backgroudColor"],
+      borderColor: "white",
+      textColor: events[id]["textColor"],
+      start: new Date(
+        events[id].start.seconds * 1000 + events[id].start.nanoseconds / 1e6
+      ),
+      end: new Date(
+        events[id].start.seconds * 1000 + events[id].start.nanoseconds / 1e6
+      ),
+      allDay: false,
     });
-    calendar.render();
+  }
+
+  var calendarEl = document.getElementById("calendar");
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "timeGridWeek",
+    nowIndicator: true,
+    eventLimit: true,
+    views: {
+      agenda: {
+        eventLimit: 4,
+      },
+    },
+
+    allDayText: "Ganztägig",
+    initialDate: new Date(),
+    locale: "de",
+
+    events: eventList,
+
+    buttonText: {
+      today: "Heute",
+      month: "Monat",
+      week: "Woche",
+      day: "Tag",
+    },
+    headerToolbar: {
+      left: "prev,next",
+      center: "title",
+      right: "dayGridMonth,timeGridWeek,timeGridDay",
+    },
+    timeFormat: "h:mm",
+    eventClick: function (c, jsEvent, view) {
+      const idC = c.el.fcSeg.eventRange.def.publicId;
+
+      const popup = document.getElementById("kalender_popup");
+      const taskTitle = events[idC].title;
+      const taskDescription = events[idC].description;
+      const taskDueDate = events[idC].start;
+      const taskWorker = events[idC].worker;
+      const taskBuilding = events[idC].building;
+      const taskRepeat = events[idC].repeat;
+      const taskDone = new Date(events[idC].done.seconds * 1000);
+      const january1st2010 = new Date("2010-01-01T00:00:00Z");
+      const resultDone =
+        taskDone > january1st2010
+          ? "Ja, am " + taskDone.toLocaleString()
+          : "Nein, noch nicht erledigt.";
+
+      document.getElementById("popup_title").textContent = taskTitle;
+      document.getElementById("popup_description").textContent =
+        taskDescription;
+      document.getElementById("popup_time").textContent = new Date(
+        taskDueDate.seconds * 1000
+      ).toLocaleString();
+      document.getElementById("popup_worker").textContent = taskWorker;
+      document.getElementById("popup_done").textContent = resultDone;
+      document.getElementById("popup_building").textContent = taskBuilding;
+      document.getElementById("popup_repeat").textContent = taskRepeat;
+
+      popup.style.display = "flex";
+      popup.style.alignItems = "center";
+      popup.style.justifyContent = "center";
+    },
   });
+
+  calendar.render();
+}
+
+document.getElementById("close_popup").addEventListener("click", function () {
+  const popup = document.getElementById("kalender_popup");
+  popup.style.display = "none";
+});
+
+mitarbeiter_Calender_Select.addEventListener("change", function () {
+  const selectedValue = mitarbeiter_Calender_Select.value;
+  if (selectedValue == "cal_all") {
+
+    renderCalendar(newEvents);
+  } else {
+    let workerList = {};
+
+
+
+    for (const key in newEvents) {
+      const item = newEvents[key];
+      if (item.worker === selectedValue) {
+        const { bgColor, textColor } = getRandomColor(item.worker);
+  
+        workerList[key] = {
+          backgroundColor: bgColor,
+          textColor: textColor,
+          worker: selectedValue,
+          title: newEvents[key].title,
+          description: newEvents[key].description,
+          start: newEvents[key].start,
+          end: newEvents[key].end,
+          repeat: newEvents[key].repeat,
+          done: newEvents[key].done,
+          building: newEvents[key].building,
+          buildingID: newEvents[key].buildingID,
+        };
+      }
+    }
+    renderCalendar(workerList);
+  }
+});
+
+
+function getRandomColor(worker) {
+  if (workerColors.hasOwnProperty(worker)) {
+    return workerColors[worker];
+  }
+  
+  const randomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+  
+  const bgColor = randomColor();
+  const textColor = parseInt(bgColor.replace(/^#/, ''), 16) > 0xffffff / 2 ? "#000000" : "#ffffff";
+  workerColors[worker]={bgColor,textColor};
+
+  return { bgColor, textColor };
+  
 }

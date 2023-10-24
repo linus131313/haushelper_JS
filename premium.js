@@ -182,6 +182,7 @@ function handleSignUp(e) {
                 hausnummer: document.getElementById("iHausnummer").value,
                 strasse: document.getElementById("iStrasse").value,
                 ort: document.getElementById("iOrt").value,
+                phone: document.getElementById("iPhone").value,
               };
 
               const adminsRef = collection(db, "Admins");

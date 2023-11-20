@@ -224,6 +224,7 @@ onAuthStateChanged(auth, (user) => {
               querySnapshot.forEach((taskdoc) => {
                 
 const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
+
                 newEvents[taskdoc.id] = {
                   worker: taskdoc.data().assignee,
                   title: taskdoc.data().title,
@@ -239,7 +240,7 @@ const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
                 };
               });
 
-              renderCalendar(newEvents);
+              // renderCalendar(newEvents);
             }
           });
 
@@ -366,9 +367,11 @@ const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
                     if (once) {
                       var opt2 = document.createElement("option");
                       opt2.text = docUsers.data().email;
-                      mitarbeiter_List.appendChild(opt2);
+                      var opt3 = document.createElement("option");
+                      opt3.text = docUsers.data().email;                   
 
                       mitarbeiter_Calender_Select.appendChild(opt2);
+                      mitarbeiter_List.appendChild(opt3);
                     }
 
                     // mitarbeiter_List.appendChild(opt);
@@ -438,10 +441,10 @@ const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
                 docy.data().userAvailable;
               document.getElementById("mitarbeiterY").innerHTML =
                 docy.data().userInit;
-              document.getElementById("gebaudeX").innerHTML =
-                docy.data().facilityAvailable;
-              document.getElementById("gebaudeY").innerHTML =
-                docy.data().facilityInit;
+              // document.getElementById("gebaudeX").innerHTML =
+              //   docy.data().facilityAvailable;
+              // document.getElementById("gebaudeY").innerHTML =
+              //   docy.data().facilityInit;
               const timestamp_purchased = docy.data().purchased;
               const date = new Date(timestamp_purchased.seconds * 1000);
               const dateString = date.toLocaleDateString();
@@ -459,23 +462,42 @@ const { bgColor, textColor } = getRandomColor(taskdoc.data().assignee);
         }
       });
     });
-    const uid = user.uid;
-    privateElements.forEach(function (element) {
-      element.style.display = "initial";
-    });
-    publicElements.forEach(function (element) {
-      element.style.display = "none";
-    });
+    //const uid = user.uid;
+    // privateElements.forEach(function (element) {
+    //   element.style.display = "initial";
+    // });
+    // publicElements.forEach(function (element) {
+    //   element.style.display = "none";
+    // });
   } else {
     window.location.href = "/login";
-    publicElements.forEach(function (element) {
-      element.style.display = "initial";
-    });
-    privateElements.forEach(function (element) {
-      element.style.display = "none";
-    });
+    // publicElements.forEach(function (element) {
+    //   element.style.display = "initial";
+    // });
+    // privateElements.forEach(function (element) {
+    //   element.style.display = "none";
+    // });
   }
 });
+
+
+document.getElementById('calendar-tab').addEventListener('click', function () {
+  console.log("Klick");
+  setTimeout(function () {
+    renderCalendar(newEvents);
+  }, 500);
+
+});
+
+document.getElementById('aufgaben-tab').addEventListener('click', function () {
+  console.log("Klick");
+  setTimeout(function () {
+    renderCalendar(newEvents);
+  }, 500);
+
+});
+
+
 
 function renderCalendar(events) {
   let eventList = [];
@@ -612,8 +634,6 @@ function getRandomColor(worker) {
   const randomHue = Math.floor(Math.random() * 360); 
   const saturation = 70 + Math.random() * 10; 
   const lightness = 50 + Math.random() * 10; 
-
-  // Konvertiere HSL-Farbe in Hex
   const bgColor = `hsl(${randomHue}, ${saturation}%, ${lightness}%)`;
   const textColor = lightness > 60 ? "#000000" : "#ffffff";
 
